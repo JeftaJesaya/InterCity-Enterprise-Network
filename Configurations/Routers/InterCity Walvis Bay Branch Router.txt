@@ -1,0 +1,211 @@
+WVBBranchRouter#show run
+Building configuration...
+
+Current configuration : 4933 bytes
+!
+version 15.1
+no service timestamps log datetime msec
+no service timestamps debug datetime msec
+no service password-encryption
+!
+hostname WVBBranchRouter
+!
+!
+!
+!
+!
+!
+!
+!
+no ip cef
+no ipv6 cef
+!
+!
+!
+username admin secret 5 $1$mERr$3HhIgMGBA/9qNmgzccuxv0
+!
+!
+license udi pid CISCO2811/K9 sn FTX10178JX4-
+!
+!
+!
+crypto isakmp policy 10
+ encr aes
+ authentication pre-share
+ group 2
+!
+crypto isakmp key CISCO123 address 10.0.3.1
+crypto isakmp key CISCO123 address 10.0.3.9
+crypto isakmp key CISCO123 address 10.0.3.13
+crypto isakmp key CISCO123 address 10.0.3.21
+!
+!
+!
+crypto ipsec transform-set ENTERPRISE-IPSEC esp-aes esp-sha-hmac
+!
+crypto map IPSEC-MAP-ISP1 10 ipsec-isakmp 
+ set peer 10.0.3.1
+ set pfs group2
+ set transform-set ENTERPRISE-IPSEC 
+ match address 110
+!
+crypto map IPSEC-MAP-ISP1 20 ipsec-isakmp 
+ set peer 10.0.3.9
+ set pfs group2
+ set transform-set ENTERPRISE-IPSEC 
+ match address 111
+!
+!
+crypto map IPSEC-MAP-ISP2 10 ipsec-isakmp 
+ set peer 10.0.3.13
+ set pfs group2
+ set transform-set ENTERPRISE-IPSEC 
+ match address 110
+!
+crypto map IPSEC-MAP-ISP2 20 ipsec-isakmp 
+ set peer 10.0.3.21
+ set pfs group2
+ set transform-set ENTERPRISE-IPSEC 
+ match address 111
+!
+!
+!
+!
+ip ssh version 2
+ip domain-name Admin.InterCity.Local
+!
+!
+spanning-tree mode pvst
+!
+!
+!
+!
+!
+!
+interface FastEthernet0/0
+ no ip address
+ duplex auto
+ speed auto
+!
+interface FastEthernet0/0.10
+ encapsulation dot1Q 10
+ ip address 10.0.1.65 255.255.255.240
+ ip helper-address 10.0.0.82
+!
+interface FastEthernet0/0.20
+ encapsulation dot1Q 20
+ ip address 10.0.1.1 255.255.255.224
+ ip helper-address 10.0.0.82
+ ip access-group 100 in
+!
+interface FastEthernet0/0.30
+ encapsulation dot1Q 30
+ ip address 10.0.1.81 255.255.255.240
+ ip helper-address 10.0.0.82
+!
+interface FastEthernet0/0.40
+ encapsulation dot1Q 40
+ ip address 10.0.1.33 255.255.255.224
+ ip helper-address 10.0.0.82
+ ip access-group 100 in
+!
+interface FastEthernet0/0.50
+ encapsulation dot1Q 50
+ ip address 10.0.1.97 255.255.255.240
+ ip helper-address 10.0.0.82
+!
+interface FastEthernet0/1
+ no ip address
+ duplex auto
+ speed auto
+ shutdown
+!
+interface Serial0/0/0
+ ip address 10.0.3.5 255.255.255.252
+ ip ospf cost 10
+ clock rate 2000000
+ crypto map IPSEC-MAP-ISP1
+!
+interface Serial0/0/1
+ ip address 10.0.3.17 255.255.255.252
+ ip ospf cost 100
+ clock rate 2000000
+ crypto map IPSEC-MAP-ISP2
+!
+interface Vlan1
+ no ip address
+ shutdown
+!
+router ospf 10
+ log-adjacency-changes
+ network 10.0.1.0 0.0.0.31 area 0
+ network 10.0.1.32 0.0.0.31 area 0
+ network 10.0.1.64 0.0.0.15 area 0
+ network 10.0.1.80 0.0.0.15 area 0
+ network 10.0.1.96 0.0.0.15 area 0
+ network 10.0.3.4 0.0.0.3 area 0
+ network 10.0.3.16 0.0.0.3 area 0
+!
+ip classless
+!
+ip flow-export version 9
+!
+!
+access-list 100 remark ==========================================
+access-list 100 remark Enterprise Security Policy
+access-list 100 remark Purpose:
+access-list 100 remark - Block Guests from all Management VLANs
+access-list 100 remark - Block Users from all Guest VLANs
+access-list 100 remark - Permit all other traffic
+access-list 100 remark =========================================
+access-list 100 remark Guests cannot access any Management VLAN
+access-list 100 deny ip 10.0.0.32 0.0.0.31 10.0.0.64 0.0.0.15
+access-list 100 deny ip 10.0.0.32 0.0.0.31 10.0.1.64 0.0.0.15
+access-list 100 deny ip 10.0.0.32 0.0.0.31 10.0.2.64 0.0.0.15
+access-list 100 deny ip 10.0.1.32 0.0.0.31 10.0.0.64 0.0.0.15
+access-list 100 deny ip 10.0.1.32 0.0.0.31 10.0.1.64 0.0.0.15
+access-list 100 deny ip 10.0.1.32 0.0.0.31 10.0.2.64 0.0.0.15
+access-list 100 deny ip 10.0.2.32 0.0.0.31 10.0.0.64 0.0.0.15
+access-list 100 deny ip 10.0.2.32 0.0.0.31 10.0.1.64 0.0.0.15
+access-list 100 deny ip 10.0.2.32 0.0.0.31 10.0.2.64 0.0.0.15
+access-list 100 remark Users cannot access any Guest VLAN
+access-list 100 deny ip 10.0.0.0 0.0.0.31 10.0.0.32 0.0.0.31
+access-list 100 deny ip 10.0.0.0 0.0.0.31 10.0.1.32 0.0.0.31
+access-list 100 deny ip 10.0.0.0 0.0.0.31 10.0.2.32 0.0.0.31
+access-list 100 deny ip 10.0.1.0 0.0.0.31 10.0.0.32 0.0.0.31
+access-list 100 deny ip 10.0.1.0 0.0.0.31 10.0.1.32 0.0.0.31
+access-list 100 deny ip 10.0.1.0 0.0.0.31 10.0.2.32 0.0.0.31
+access-list 100 deny ip 10.0.2.0 0.0.0.31 10.0.0.32 0.0.0.31
+access-list 100 deny ip 10.0.2.0 0.0.0.31 10.0.1.32 0.0.0.31
+access-list 100 deny ip 10.0.2.0 0.0.0.31 10.0.2.32 0.0.0.31
+access-list 100 remark Permit all remaining traffic
+access-list 100 permit ip any any
+access-list 110 remark Crypto ACL for Windhoek tunnel
+access-list 110 permit ip 10.0.1.0 0.0.0.255 10.0.0.0 0.0.0.255
+access-list 111 remark Crypto ACL for OSHAKATI tunnel
+access-list 111 permit ip 10.0.1.0 0.0.0.255 10.0.2.0 0.0.0.255
+access-list 10 remark ACL for SSH
+access-list 10 permit 10.0.0.64 0.0.0.15
+access-list 10 permit 10.0.1.64 0.0.0.15
+access-list 10 permit 10.0.2.64 0.0.0.15
+access-list 10 deny any
+!
+!
+!
+!
+!
+line con 0
+!
+line aux 0
+!
+line vty 0 4
+ access-class 10 in
+ login local
+ transport input ssh
+!
+!
+!
+end
+
+
+WVBBranchRouter#
